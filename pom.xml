@@ -16,6 +16,7 @@
     <properties>
         <java.version>17</java.version>
     </properties>
+
     <dependencies>
 
         <dependency>
@@ -51,9 +52,23 @@
             <version>2.1.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
 
 
     </dependencies>
+
+    <!-- Deploy to Nexus -->
+    <distributionManagement>
+        <repository>
+            <id>deploymentRepo</id>
+            <name>Nexus Repository</name>
+            <url>http://localhost:8081/repository/maven-releases/</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <plugins>
@@ -68,6 +83,39 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+
+            <!-- Plugin JaCoCo -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.10</version> <!-- Dernière version disponible -->
+                <executions>
+                    <!-- Préparation pour les tests -->
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <!-- Génération du rapport -->
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
             </plugin>
         </plugins>
     </build>
