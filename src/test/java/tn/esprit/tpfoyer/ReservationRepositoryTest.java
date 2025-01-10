@@ -3,78 +3,85 @@ package tn.esprit.tpfoyer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import tn.esprit.tpfoyer.entity.Reservation;
 import tn.esprit.tpfoyer.repository.ReservationRepository;
 
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest  // This annotation is used for JPA tests (it auto-configures an in-memory database)
+@SpringBootTest
 public class ReservationRepositoryTest {
 
     @Autowired
     private ReservationRepository reservationRepository;
 
-    private Reservation reservation;
+    private Reservation reservation1;
+    private Reservation reservation2;
+    private Date currentDate;
 
     @BeforeEach
-    void setUp() {
-        // Create a new Reservation object before each test
-        reservation = new Reservation("1", new Date(), true, null);
+    public void setUp() {
+        // Initialisation des données avant chaque test
+        currentDate = new Date();
+
+        reservation1 = new Reservation();
+        reservation1.setAnneeUniversitaire(new Date(currentDate.getTime() - 10000000)); // Une date avant la date actuelle
+        reservation1.setEstValide(true);
+
+        reservation2 = new Reservation();
+        reservation2.setAnneeUniversitaire(new Date(currentDate.getTime() + 10000000)); // Une date après la date actuelle
+        reservation2.setEstValide(false);
+
+        // Sauvegarde dans la base de données en mémoire
+        reservationRepository.save(reservation1);
+        reservationRepository.save(reservation2);
     }
 
     @Test
-    void testSaveReservation() {
-        // Save the reservation entity to the in-memory database
-        Reservation savedReservation = reservationRepository.save(reservation);
+    public void testFindAllByAnneeUniversitaireBeforeAndEstValide() {
+        // Test de la méthode findAllByAnneeUniversitaireBeforeAndEstValide
+        List<Reservation> result = reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(currentDate, true);
 
-        // Assert that the reservation has been saved and the ID is not null
-        assertNotNull(savedReservation);
-        assertNotNull(savedReservation.getIdReservation());
-        assertEquals("1", savedReservation.getIdReservation());
+        // Vérification que la taille de la liste correspond à l'attente
+        assertNotNull(result);
+        assertEquals(1, result.size());
+
+        // Vérification que l'élément retourné est bien le premier (celui qui correspond aux critères)
+        assertTrue(result.contains(reservation1));
+        assertFalse(result.contains(reservation2)); // Vérification que reservation2 n'est pas incluse
     }
 
     @Test
-    void testFindReservationById() {
-        // Save the reservation first
-        reservationRepository.save(reservation);
+    public void testFindAllByAnneeUniversitaireBeforeAndEstValideWithNoResults() {
+        // Cas où il n'y a pas de résultats correspondant aux critères
+        List<Reservation> result = reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(currentDate, false);
 
-        // Retrieve the reservation by its ID
-        Optional<Reservation> foundReservation = reservationRepository.findById("1");
-
-        // Assert that the reservation is found and has the correct ID
-        assertTrue(foundReservation.isPresent());
-        assertEquals("1", foundReservation.get().getIdReservation());
+        // Vérification que la liste est vide
+        assertNotNull(result);
+        assertEquals(0, result.size());
     }
 
     @Test
-    void testDeleteReservation() {
-        // Save the reservation
-        reservationRepository.save(reservation);
+    public void testFindAllByAnneeUniversitaireBeforeAndEstValideWithMultipleResults() {
+        // Sauvegarde d'une troisième réservation valide
+        Reservation reservation3 = new Reservation();
+        reservation3.setAnneeUniversitaire(new Date(currentDate.getTime() - 5000000)); // Une date avant la date actuelle
+        reservation3.setEstValide(true);
+        reservationRepository.save(reservation3);
 
-        // Delete the reservation
-        reservationRepository.deleteById("1");
+        // Test de la méthode findAllByAnneeUniversitaireBeforeAndEstValide avec plusieurs résultats
+        List<Reservation> result = reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(currentDate, true);
 
-        // Assert that the reservation no longer exists in the database
-        Optional<Reservation> deletedReservation = reservationRepository.findById("1");
-        assertFalse(deletedReservation.isPresent());
-    }
+        // Vérification que la taille de la liste correspond à l'attente
+        assertNotNull(result);
+        assertEquals(2, result.size());
 
-    @Test
-    void testUpdateReservation() {
-        // Save the reservation
-        Reservation savedReservation = reservationRepository.save(reservation);
-
-        // Modify the reservation
-        savedReservation.setEstValide(false);
-
-        // Save the updated reservation
-        Reservation updatedReservation = reservationRepository.save(savedReservation);
-
-        // Assert that the reservation was updated successfully
-        assertEquals(false, updatedReservation.isEstValide());
+        // Vérification que toutes les réservations valides avant la date actuelle sont retournées
+        assertTrue(result.contains(reservation1));
+        assertTrue(result.contains(reservation3));
+        assertFalse(result.contains(reservation2)); // reservation2 ne doit pas être incluse
     }
 }
