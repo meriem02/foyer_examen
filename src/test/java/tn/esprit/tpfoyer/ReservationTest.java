@@ -35,12 +35,15 @@ class ReservationTest {
         reservation.setAnneeUniversitaire(new Date());
         reservation.setEstValide(true);
 
-        Etudiant etudiant1 = mock(Etudiant.class);
-        Etudiant etudiant2 = mock(Etudiant.class);
+        Etudiant etudiant1 = new Etudiant();
+        etudiant1.setIdEtudiant(1L);
+        Etudiant etudiant2 = new Etudiant();
+        etudiant2.setIdEtudiant(2L);
+
         reservation.setEtudiants(new HashSet<>(Arrays.asList(etudiant1, etudiant2)));
     }
 
-    // Test de duplication
+    // ✅ Test d'ajout de réservation dupliquée
     @Test
     void testAddDuplicateReservation() {
         when(reservationRepository.findById("1")).thenReturn(Optional.of(reservation));
@@ -48,43 +51,51 @@ class ReservationTest {
         Reservation newReservation = new Reservation();
         newReservation.setIdReservation("1");
 
-        assertThrows(IllegalArgumentException.class, () -> reservationService.addReservation(newReservation));
+        assertThrows(IllegalArgumentException.class, () -> reservationService.addReservation(newReservation),
+                "Reservation with the same ID already exists");
 
         verify(reservationRepository, never()).save(newReservation);
     }
 
-    // Test de suppression de réservation inexistante
+    // ✅ Test de suppression de réservation inexistante
     @Test
     void testRemoveNonExistentReservation() {
-        doThrow(new NoSuchElementException("Reservation not found")).when(reservationRepository).deleteById("99");
+        when(reservationRepository.findById("99")).thenReturn(Optional.empty());
 
-        assertThrows(NoSuchElementException.class, () -> reservationService.removeReservation("99"));
+        assertThrows(NoSuchElementException.class, () -> reservationService.removeReservation("99"),
+                "Reservation not found");
 
-        verify(reservationRepository, times(1)).deleteById("99");
+        verify(reservationRepository, never()).deleteById("99");
     }
 
-    // Test de modification avec données nulles
+    // ✅ Test de modification avec données nulles
     @Test
     void testModifyReservationWithNullData() {
-        assertThrows(IllegalArgumentException.class, () -> reservationService.modifyReservation(null));
+        assertThrows(IllegalArgumentException.class, () -> reservationService.modifyReservation(null),
+                "Reservation cannot be null");
+
         verify(reservationRepository, never()).save(any());
     }
 
-    // Test de recherche avec ID null
+    // ✅ Test de recherche avec ID null
     @Test
     void testRetrieveReservationWithNullId() {
-        assertThrows(IllegalArgumentException.class, () -> reservationService.retrieveReservation(null));
+        assertThrows(IllegalArgumentException.class, () -> reservationService.retrieveReservation(null),
+                "ID cannot be null");
+
         verify(reservationRepository, never()).findById(null);
     }
 
-    // Test de suppression avec ID null
+    // ✅ Test de suppression avec ID null
     @Test
     void testRemoveReservationWithNullId() {
-        assertThrows(IllegalArgumentException.class, () -> reservationService.removeReservation(null));
+        assertThrows(IllegalArgumentException.class, () -> reservationService.removeReservation(null),
+                "ID cannot be null");
+
         verify(reservationRepository, never()).deleteById(null);
     }
 
-    // Test de recherche par date et statut avec une liste vide
+    // ✅ Test de recherche par date et statut avec une liste vide
     @Test
     void testTrouverResSelonDateEtStatusWithEmptyResult() {
         when(reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true)))
@@ -93,10 +104,11 @@ class ReservationTest {
         List<Reservation> result = reservationService.trouverResSelonDateEtStatus(new Date(), true);
 
         assertThat(result).isEmpty();
-        verify(reservationRepository, times(1)).findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true));
+        verify(reservationRepository, times(1))
+                .findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true));
     }
 
-    // Test de mise à jour d'une réservation inexistante
+    // ✅ Test de mise à jour d'une réservation inexistante
     @Test
     void testModifyNonExistentReservation() {
         Reservation nonExistentReservation = new Reservation();
@@ -105,36 +117,41 @@ class ReservationTest {
         when(reservationRepository.save(nonExistentReservation)).thenReturn(nonExistentReservation);
 
         Reservation result = reservationService.modifyReservation(nonExistentReservation);
+
         assertThat(result).isNotNull();
         assertThat(result.getIdReservation()).isEqualTo("99");
+        verify(reservationRepository, times(1)).save(nonExistentReservation);
     }
 
-    // Test de validation de la liste d'étudiants
+    // ✅ Test de validation de la liste d'étudiants vide
     @Test
     void testAddReservationWithEmptyEtudiants() {
         Reservation reservationWithNoEtudiants = new Reservation();
         reservationWithNoEtudiants.setIdReservation("2");
         reservationWithNoEtudiants.setEtudiants(new HashSet<>());
 
-        assertThrows(IllegalArgumentException.class, () -> reservationService.addReservation(reservationWithNoEtudiants));
+        assertThrows(IllegalArgumentException.class, () -> reservationService.addReservation(reservationWithNoEtudiants),
+                "Reservation must have at least one student");
+
         verify(reservationRepository, never()).save(any());
     }
 
-    // Test pour vérifier que la méthode findAll() est appelée sans répétition
+    // ✅ Test pour vérifier que la méthode findAll() est appelée une seule fois
     @Test
     void testRetrieveAllReservationsCalledOnce() {
         when(reservationRepository.findAll()).thenReturn(Arrays.asList(reservation));
 
         List<Reservation> reservations = reservationService.retrieveAllReservations();
-        assertThat(reservations).isNotEmpty();
 
+        assertThat(reservations).isNotEmpty();
         verify(reservationRepository, times(1)).findAll();
     }
 
-    // Test avec suppression et vérification de l'interaction
+    // ✅ Test avec suppression et vérification de l'interaction
     @Test
     void testRemoveReservationAndVerifyInteraction() {
         doNothing().when(reservationRepository).deleteById("1");
+
         reservationService.removeReservation("1");
 
         verify(reservationRepository, times(1)).deleteById("1");
