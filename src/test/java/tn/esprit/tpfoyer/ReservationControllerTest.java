@@ -36,6 +36,7 @@ class ReservationControllerTest {
         reservation.setEstValide(true);
     }
 
+    // ✅ Test pour récupérer toutes les réservations
     @Test
     void testGetReservations() {
         when(reservationService.retrieveAllReservations()).thenReturn(Arrays.asList(reservation));
@@ -47,6 +48,22 @@ class ReservationControllerTest {
         verify(reservationService, times(1)).retrieveAllReservations();
     }
 
+    // ✅ Test pour vérifier les exceptions lors de la récupération des réservations
+    @Test
+    void testGetReservationsException() {
+        when(reservationService.retrieveAllReservations()).thenThrow(new RuntimeException("Service unavailable"));
+
+        try {
+            reservationRestController.getReservations();
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(RuntimeException.class);
+            assertThat(e.getMessage()).isEqualTo("Service unavailable");
+        }
+
+        verify(reservationService, times(1)).retrieveAllReservations();
+    }
+
+    // ✅ Test pour récupérer une réservation spécifique
     @Test
     void testRetrieveReservation() {
         when(reservationService.retrieveReservation("1")).thenReturn(reservation);
@@ -58,16 +75,18 @@ class ReservationControllerTest {
         verify(reservationService, times(1)).retrieveReservation("1");
     }
 
+    // ✅ Test pour une réservation non trouvée
     @Test
     void testRetrieveReservationNotFound() {
-        when(reservationService.retrieveReservation("999")).thenReturn(null);  // Simuler l'absence de la réservation
+        when(reservationService.retrieveReservation("999")).thenReturn(null);
 
         Reservation result = reservationRestController.retrieveReservation("999");
 
-        assertThat(result).isNull();  // Vérifier que la réservation est null
+        assertThat(result).isNull();
         verify(reservationService, times(1)).retrieveReservation("999");
     }
 
+    // ✅ Test pour ajouter une réservation
     @Test
     void testAddReservation() {
         when(reservationService.addReservation(reservation)).thenReturn(reservation);
@@ -79,6 +98,24 @@ class ReservationControllerTest {
         verify(reservationService, times(1)).addReservation(reservation);
     }
 
+    // ✅ Test pour ajouter une réservation avec une date null
+    @Test
+    void testAddReservationWithNullDate() {
+        reservation.setAnneeUniversitaire(null);
+
+        when(reservationService.addReservation(reservation)).thenThrow(new IllegalArgumentException("Date is required"));
+
+        try {
+            reservationRestController.addReservation(reservation);
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(IllegalArgumentException.class);
+            assertThat(e.getMessage()).isEqualTo("Date is required");
+        }
+
+        verify(reservationService, times(1)).addReservation(reservation);
+    }
+
+    // ✅ Test pour modifier une réservation
     @Test
     void testModifyReservation() {
         when(reservationService.modifyReservation(reservation)).thenReturn(reservation);
@@ -89,6 +126,22 @@ class ReservationControllerTest {
         verify(reservationService, times(1)).modifyReservation(reservation);
     }
 
+    // ✅ Test pour modifier une réservation avec une entrée nulle
+    @Test
+    void testModifyReservationWithNull() {
+        when(reservationService.modifyReservation(null)).thenThrow(new IllegalArgumentException("Reservation cannot be null"));
+
+        try {
+            reservationRestController.modifyReservation(null);
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(IllegalArgumentException.class);
+            assertThat(e.getMessage()).isEqualTo("Reservation cannot be null");
+        }
+
+        verify(reservationService, times(1)).modifyReservation(null);
+    }
+
+    // ✅ Test pour supprimer une réservation
     @Test
     void testRemoveReservation() {
         doNothing().when(reservationService).removeReservation("1");
@@ -98,6 +151,22 @@ class ReservationControllerTest {
         verify(reservationService, times(1)).removeReservation("1");
     }
 
+    // ✅ Test pour supprimer une réservation avec un ID invalide
+    @Test
+    void testRemoveReservationWithInvalidId() {
+        doThrow(new IllegalArgumentException("Invalid ID")).when(reservationService).removeReservation("");
+
+        try {
+            reservationRestController.removeReservation("");
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(IllegalArgumentException.class);
+            assertThat(e.getMessage()).isEqualTo("Invalid ID");
+        }
+
+        verify(reservationService, times(1)).removeReservation("");
+    }
+
+    // ✅ Test pour récupérer les réservations par date et statut
     @Test
     void testRetrieveReservationParDateEtStatus() {
         when(reservationService.trouverResSelonDateEtStatus(any(Date.class), eq(true)))
@@ -109,20 +178,22 @@ class ReservationControllerTest {
         verify(reservationService, times(1)).trouverResSelonDateEtStatus(any(Date.class), eq(true));
     }
 
+    // ✅ Test pour récupérer les réservations par date et statut sans résultats
     @Test
     void testRetrieveReservationParDateEtStatusNoResults() {
         when(reservationService.trouverResSelonDateEtStatus(any(Date.class), eq(false)))
-                .thenReturn(Arrays.asList());  // Simuler aucune réservation
+                .thenReturn(Arrays.asList());
 
         List<Reservation> result = reservationRestController.retrieveReservationParDateEtStatus(new Date(), false);
 
-        assertThat(result).isEmpty();  // Vérifier que la liste est vide
+        assertThat(result).isEmpty();
         verify(reservationService, times(1)).trouverResSelonDateEtStatus(any(Date.class), eq(false));
     }
 
+    // ✅ Test pour ajouter une réservation avec des données invalides
     @Test
     void testAddReservationWithInvalidData() {
-        reservation.setIdReservation(null);  // Id null pour simuler une mauvaise entrée
+        reservation.setIdReservation(null);
 
         when(reservationService.addReservation(reservation)).thenThrow(new IllegalArgumentException("Invalid Reservation"));
 
