@@ -126,14 +126,11 @@ class ReservationTest {
         nonExistentReservation.setIdReservation("99");
 
         // Simuler l'enregistrement d'une réservation inexistante
-        when(reservationRepository.save(nonExistentReservation)).thenReturn(nonExistentReservation);
+        when(reservationRepository.findById("99")).thenReturn(Optional.empty());
 
-        // Modifier la réservation et vérifier qu'elle est correctement retournée
-        Reservation result = reservationService.modifyReservation(nonExistentReservation);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getIdReservation()).isEqualTo("99");
-        verify(reservationRepository, times(1)).save(nonExistentReservation);
+        // Vérifier qu'une exception est lancée lorsqu'on tente de modifier une réservation inexistante
+        assertThrows(NoSuchElementException.class, () -> reservationService.modifyReservation(nonExistentReservation),
+                "Reservation not found");
     }
 
     // ✅ Test de validation de la liste d'étudiants vide
@@ -141,7 +138,7 @@ class ReservationTest {
     void testAddReservationWithEmptyEtudiants() {
         Reservation reservationWithNoEtudiants = new Reservation();
         reservationWithNoEtudiants.setIdReservation("2");
-        reservationWithNoEtudiants.setEtudiants(new HashSet<>());
+        reservationWithNoEtudiants.setEtudiants(new HashSet<>()); // Liste vide d'étudiants
 
         // Vérifier que la méthode lève une exception si la réservation n'a pas d'étudiants
         assertThrows(IllegalArgumentException.class, () -> reservationService.addReservation(reservationWithNoEtudiants),
