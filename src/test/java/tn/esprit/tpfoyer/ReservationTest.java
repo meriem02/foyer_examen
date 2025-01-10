@@ -51,9 +51,11 @@ class ReservationTest {
         Reservation newReservation = new Reservation();
         newReservation.setIdReservation("1");
 
+        // Vérifier que l'ajout d'une réservation avec un ID existant lance une exception
         assertThrows(IllegalArgumentException.class, () -> reservationService.addReservation(newReservation),
                 "Reservation with the same ID already exists");
 
+        // Vérifier que la méthode save n'est pas appelée
         verify(reservationRepository, never()).save(newReservation);
     }
 
@@ -62,36 +64,44 @@ class ReservationTest {
     void testRemoveNonExistentReservation() {
         when(reservationRepository.findById("99")).thenReturn(Optional.empty());
 
+        // Vérifier qu'une exception est lancée lorsqu'une réservation inexistante est supprimée
         assertThrows(NoSuchElementException.class, () -> reservationService.removeReservation("99"),
                 "Reservation not found");
 
+        // Vérifier que la méthode deleteById n'est pas appelée
         verify(reservationRepository, never()).deleteById("99");
     }
 
     // ✅ Test de modification avec données nulles
     @Test
     void testModifyReservationWithNullData() {
+        // Vérifier que la méthode lève une exception si la réservation est null
         assertThrows(IllegalArgumentException.class, () -> reservationService.modifyReservation(null),
                 "Reservation cannot be null");
 
+        // Vérifier que la méthode save n'est pas appelée
         verify(reservationRepository, never()).save(any());
     }
 
     // ✅ Test de recherche avec ID null
     @Test
     void testRetrieveReservationWithNullId() {
+        // Vérifier que la méthode lève une exception si l'ID est null
         assertThrows(IllegalArgumentException.class, () -> reservationService.retrieveReservation(null),
                 "ID cannot be null");
 
+        // Vérifier que la méthode findById n'est pas appelée
         verify(reservationRepository, never()).findById(null);
     }
 
     // ✅ Test de suppression avec ID null
     @Test
     void testRemoveReservationWithNullId() {
+        // Vérifier que la méthode lève une exception si l'ID est null
         assertThrows(IllegalArgumentException.class, () -> reservationService.removeReservation(null),
                 "ID cannot be null");
 
+        // Vérifier que la méthode deleteById n'est pas appelée
         verify(reservationRepository, never()).deleteById(null);
     }
 
@@ -101,6 +111,7 @@ class ReservationTest {
         when(reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true)))
                 .thenReturn(Collections.emptyList());
 
+        // Vérifier que la méthode retourne une liste vide si aucune réservation n'est trouvée
         List<Reservation> result = reservationService.trouverResSelonDateEtStatus(new Date(), true);
 
         assertThat(result).isEmpty();
@@ -114,8 +125,10 @@ class ReservationTest {
         Reservation nonExistentReservation = new Reservation();
         nonExistentReservation.setIdReservation("99");
 
+        // Simuler l'enregistrement d'une réservation inexistante
         when(reservationRepository.save(nonExistentReservation)).thenReturn(nonExistentReservation);
 
+        // Modifier la réservation et vérifier qu'elle est correctement retournée
         Reservation result = reservationService.modifyReservation(nonExistentReservation);
 
         assertThat(result).isNotNull();
@@ -130,9 +143,11 @@ class ReservationTest {
         reservationWithNoEtudiants.setIdReservation("2");
         reservationWithNoEtudiants.setEtudiants(new HashSet<>());
 
+        // Vérifier que la méthode lève une exception si la réservation n'a pas d'étudiants
         assertThrows(IllegalArgumentException.class, () -> reservationService.addReservation(reservationWithNoEtudiants),
                 "Reservation must have at least one student");
 
+        // Vérifier que la méthode save n'est pas appelée
         verify(reservationRepository, never()).save(any());
     }
 
@@ -144,6 +159,7 @@ class ReservationTest {
         List<Reservation> reservations = reservationService.retrieveAllReservations();
 
         assertThat(reservations).isNotEmpty();
+        // Vérifier que la méthode findAll est appelée une seule fois
         verify(reservationRepository, times(1)).findAll();
     }
 
@@ -152,6 +168,7 @@ class ReservationTest {
     void testRemoveReservationAndVerifyInteraction() {
         doNothing().when(reservationRepository).deleteById("1");
 
+        // Supprimer la réservation et vérifier que deleteById est appelée
         reservationService.removeReservation("1");
 
         verify(reservationRepository, times(1)).deleteById("1");
