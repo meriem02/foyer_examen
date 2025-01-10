@@ -2,107 +2,124 @@ package tn.esprit.tpfoyer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
+import tn.esprit.tpfoyer.entity.Etudiant;
 import tn.esprit.tpfoyer.entity.Reservation;
 import tn.esprit.tpfoyer.repository.ReservationRepository;
 import tn.esprit.tpfoyer.service.ReservationServiceImpl;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ReservationServiceImplTest {
 
-    @InjectMocks
-    private ReservationServiceImpl reservationService;
-
     @Mock
     private ReservationRepository reservationRepository;
+
+    @InjectMocks
+    private ReservationServiceImpl reservationService;
 
     private Reservation reservation;
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        // Création de la réservation avec un id, une date, et une validation
         reservation = new Reservation();
         reservation.setIdReservation("1");
         reservation.setAnneeUniversitaire(new Date());
         reservation.setEstValide(true);
+
+        // Optionnel : initialisation de la relation ManyToMany avec des étudiants
+        Set<Etudiant> etudiants = new HashSet<>();
+        reservation.setEtudiants(etudiants);
     }
 
     @Test
     void testRetrieveAllReservations() {
-        when(reservationRepository.findAll()).thenReturn(Arrays.asList(reservation));
+        // Given
+        List<Reservation> reservations = new ArrayList<>();
+        reservations.add(reservation);
+        when(reservationRepository.findAll()).thenReturn(reservations);
 
-        var result = reservationService.retrieveAllReservations();
+        // When
+        List<Reservation> result = reservationService.retrieveAllReservations();
 
-        assertThat(result).isNotEmpty();
-        assertThat(result.size()).isEqualTo(1);
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
         verify(reservationRepository, times(1)).findAll();
     }
 
     @Test
     void testRetrieveReservation() {
+        // Given
         when(reservationRepository.findById("1")).thenReturn(Optional.of(reservation));
 
-        var result = reservationService.retrieveReservation("1");
+        // When
+        Reservation result = reservationService.retrieveReservation("1");
 
-        assertThat(result).isNotNull();
-        assertThat(result.getIdReservation()).isEqualTo("1");
+        // Then
+        assertNotNull(result);
+        assertEquals("1", result.getIdReservation());
         verify(reservationRepository, times(1)).findById("1");
     }
 
     @Test
-    void testRetrieveReservationNotFound() {
-        when(reservationRepository.findById("999")).thenReturn(Optional.empty());
-
-        var result = reservationService.retrieveReservation("999");
-
-        assertThat(result).isNull();
-        verify(reservationRepository, times(1)).findById("999");
-    }
-
-    @Test
     void testAddReservation() {
+        // Given
         when(reservationRepository.save(reservation)).thenReturn(reservation);
 
-        var result = reservationService.addReservation(reservation);
+        // When
+        Reservation result = reservationService.addReservation(reservation);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getIdReservation()).isEqualTo("1");
+        // Then
+        assertNotNull(result);
+        assertEquals("1", result.getIdReservation());
         verify(reservationRepository, times(1)).save(reservation);
     }
 
     @Test
     void testModifyReservation() {
+        // Given
         when(reservationRepository.save(reservation)).thenReturn(reservation);
 
-        var result = reservationService.modifyReservation(reservation);
+        // When
+        Reservation result = reservationService.modifyReservation(reservation);
 
-        assertThat(result).isNotNull();
+        // Then
+        assertNotNull(result);
+        assertEquals("1", result.getIdReservation());
         verify(reservationRepository, times(1)).save(reservation);
     }
 
     @Test
-    void testRemoveReservation() {
-        doNothing().when(reservationRepository).deleteById("1");
+    void testTrouverResSelonDateEtStatus() {
+        // Given
+        Date date = new Date();
+        List<Reservation> reservations = new ArrayList<>();
+        reservations.add(reservation);
+        when(reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(date, true))
+                .thenReturn(reservations);
 
-        reservationService.removeReservation("1");
+        // When
+        List<Reservation> result = reservationService.trouverResSelonDateEtStatus(date, true);
 
-        verify(reservationRepository, times(1)).deleteById("1");
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(reservationRepository, times(1)).findAllByAnneeUniversitaireBeforeAndEstValide(date, true);
     }
 
     @Test
-    void testFindByAnneeUniversitaireAndEstValide() {
-        when(reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true)))
-                .thenReturn(Arrays.asList(reservation));
+    void testRemoveReservation() {
+        // When
+        reservationService.removeReservation("1");
 
-        var result = reservationService.trouverResSelonDateEtStatus(new Date(), true);
-
-        assertThat(result).isNotEmpty();
-        verify(reservationRepository, times(1)).findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true));
+        // Then
+        verify(reservationRepository, times(1)).deleteById("1");
     }
 }

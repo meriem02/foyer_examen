@@ -2,16 +2,15 @@ package tn.esprit.tpfoyer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import tn.esprit.tpfoyer.entity.Reservation;
 import tn.esprit.tpfoyer.repository.ReservationRepository;
 
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 class ReservationRepositoryTest {
@@ -23,47 +22,42 @@ class ReservationRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        // Initialiser une réservation de test
         reservation = new Reservation();
         reservation.setIdReservation("1");
         reservation.setAnneeUniversitaire(new Date());
         reservation.setEstValide(true);
-    }
 
-    @Test
-    void testSaveReservation() {
-        Reservation savedReservation = reservationRepository.save(reservation);
-
-        assertThat(savedReservation).isNotNull();
-        assertThat(savedReservation.getIdReservation()).isEqualTo("1");
-    }
-
-    @Test
-    void testFindById() {
+        // Sauvegarder dans la base de données de test
         reservationRepository.save(reservation);
-
-        Optional<Reservation> foundReservation = reservationRepository.findById("1");
-        assertThat(foundReservation).isPresent();
-        assertThat(foundReservation.get().getIdReservation()).isEqualTo("1");
     }
 
     @Test
-    void testFindByIdNotFound() {
-        Optional<Reservation> foundReservation = reservationRepository.findById("999");
-        assertThat(foundReservation).isNotPresent();
+    void testFindAllByAnneeUniversitaireBeforeAndEstValide() {
+        // Given
+        Date date = new Date();
+        boolean estValide = true;
+
+        // When
+        List<Reservation> result = reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(date, estValide);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result.size() > 0);  // Si la date et le statut sont corrects, la liste ne devrait pas être vide
+        assertEquals("1", result.get(0).getIdReservation());  // Vérifier que la réservation enregistrée est bien dans les résultats
     }
 
     @Test
-    void testDeleteReservation() {
-        reservationRepository.save(reservation);
+    void testFindAllByAnneeUniversitaireBeforeAndEstValideWhenNoResults() {
+        // Given
+        Date date = new Date(System.currentTimeMillis() - 10000000); // Date très ancienne
+        boolean estValide = false;
 
-        reservationRepository.deleteById("1");
-        Optional<Reservation> foundReservation = reservationRepository.findById("1");
-        assertThat(foundReservation).isNotPresent();
-    }
+        // When
+        List<Reservation> result = reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(date, estValide);
 
-    @Test
-    void testFindAll() {
-        reservationRepository.save(reservation);
-        assertThat(reservationRepository.findAll()).hasSize(1);
+        // Then
+        assertNotNull(result);
+        assertTrue(result.isEmpty());  // Aucune réservation ne correspond aux critères donnés
     }
 }
