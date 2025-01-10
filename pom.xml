@@ -75,8 +75,17 @@
         <repository>
             <id>examen</id>
             <url>http://192.168.50.4:8081/repository/examen/</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
         </repository>
     </distributionManagement>
+
 
 
     <build>
