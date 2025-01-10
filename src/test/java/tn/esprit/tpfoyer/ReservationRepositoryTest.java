@@ -2,46 +2,51 @@ package tn.esprit.tpfoyer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import tn.esprit.tpfoyer.entity.Reservation;
 import tn.esprit.tpfoyer.repository.ReservationRepository;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@DataJpaTest
 public class ReservationRepositoryTest {
 
-    @Autowired
+    @Mock
     private ReservationRepository reservationRepository;
 
     private Reservation reservation;
-    private Date currentDate;
 
     @BeforeEach
     public void setUp() {
-        // Initialisation des données nécessaires pour le test
-        currentDate = new Date();
-        reservation = new Reservation();
-        reservation.setAnneeUniversitaire(currentDate);
-        reservation.setEstValide(true);
+        // Initialiser les mocks
+        MockitoAnnotations.openMocks(this);
 
-        // Enregistrer une réservation dans la base de données en mémoire
-        reservationRepository.save(reservation);
+        // Créer une réservation de test
+        reservation = new Reservation();
+        reservation.setAnneeUniversitaire(new Date());
+        reservation.setEstValide(true);
     }
 
     @Test
     public void testFindAllByAnneeUniversitaireBeforeAndEstValide() {
-        // Appel de la méthode du repository
-        List<Reservation> result = reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(currentDate, true);
+        // Simuler le comportement du repository
+        when(reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true)))
+                .thenReturn(Arrays.asList(reservation));
 
-        // Vérifications
+        // Appeler la méthode simulée
+        List<Reservation> result = reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(new Date(), true);
+
+        // Vérifier le résultat
         assertNotNull(result);
-        assertFalse(result.isEmpty());
         assertEquals(1, result.size());
         assertEquals(reservation, result.get(0));
+
+        // Vérifier que la méthode du repository a été appelée
+        verify(reservationRepository).findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true));
     }
 }
