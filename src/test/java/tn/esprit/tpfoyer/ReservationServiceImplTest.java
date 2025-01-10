@@ -2,124 +2,119 @@ package tn.esprit.tpfoyer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import tn.esprit.tpfoyer.entity.Etudiant;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import tn.esprit.tpfoyer.entity.Reservation;
 import tn.esprit.tpfoyer.repository.ReservationRepository;
 import tn.esprit.tpfoyer.service.ReservationServiceImpl;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 class ReservationServiceImplTest {
 
-    @Mock
-    private ReservationRepository reservationRepository;
-
     @InjectMocks
     private ReservationServiceImpl reservationService;
+
+    @Mock
+    private ReservationRepository reservationRepository;
 
     private Reservation reservation;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-
-        // Création de la réservation avec un id, une date, et une validation
         reservation = new Reservation();
         reservation.setIdReservation("1");
         reservation.setAnneeUniversitaire(new Date());
         reservation.setEstValide(true);
-
-        // Optionnel : initialisation de la relation ManyToMany avec des étudiants
-        Set<Etudiant> etudiants = new HashSet<>();
-        reservation.setEtudiants(etudiants);
     }
 
     @Test
     void testRetrieveAllReservations() {
-        // Given
-        List<Reservation> reservations = new ArrayList<>();
-        reservations.add(reservation);
-        when(reservationRepository.findAll()).thenReturn(reservations);
+        when(reservationRepository.findAll()).thenReturn(Arrays.asList(reservation));
 
-        // When
-        List<Reservation> result = reservationService.retrieveAllReservations();
+        List<Reservation> reservations = reservationService.retrieveAllReservations();
 
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
+        assertThat(reservations).isNotEmpty();
+        assertThat(reservations.size()).isEqualTo(1);
         verify(reservationRepository, times(1)).findAll();
     }
 
     @Test
     void testRetrieveReservation() {
-        // Given
         when(reservationRepository.findById("1")).thenReturn(Optional.of(reservation));
 
-        // When
         Reservation result = reservationService.retrieveReservation("1");
 
-        // Then
-        assertNotNull(result);
-        assertEquals("1", result.getIdReservation());
+        assertThat(result).isNotNull();
+        assertThat(result.getIdReservation()).isEqualTo("1");
         verify(reservationRepository, times(1)).findById("1");
     }
 
     @Test
+    void testRetrieveReservationNotFound() {
+        when(reservationRepository.findById("999")).thenReturn(Optional.empty());  // Simuler l'absence de la réservation
+
+        Reservation result = reservationService.retrieveReservation("999");
+
+        assertThat(result).isNull();  // Vérifier que la réservation est null
+        verify(reservationRepository, times(1)).findById("999");
+    }
+
+    @Test
     void testAddReservation() {
-        // Given
         when(reservationRepository.save(reservation)).thenReturn(reservation);
 
-        // When
         Reservation result = reservationService.addReservation(reservation);
 
-        // Then
-        assertNotNull(result);
-        assertEquals("1", result.getIdReservation());
+        assertThat(result).isNotNull();
+        assertThat(result.getIdReservation()).isEqualTo("1");
         verify(reservationRepository, times(1)).save(reservation);
     }
 
     @Test
     void testModifyReservation() {
-        // Given
         when(reservationRepository.save(reservation)).thenReturn(reservation);
 
-        // When
         Reservation result = reservationService.modifyReservation(reservation);
 
-        // Then
-        assertNotNull(result);
-        assertEquals("1", result.getIdReservation());
+        assertThat(result).isNotNull();
         verify(reservationRepository, times(1)).save(reservation);
     }
 
     @Test
-    void testTrouverResSelonDateEtStatus() {
-        // Given
-        Date date = new Date();
-        List<Reservation> reservations = new ArrayList<>();
-        reservations.add(reservation);
-        when(reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(date, true))
-                .thenReturn(reservations);
+    void testRemoveReservation() {
+        doNothing().when(reservationRepository).deleteById("1");
 
-        // When
-        List<Reservation> result = reservationService.trouverResSelonDateEtStatus(date, true);
+        reservationService.removeReservation("1");
 
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(reservationRepository, times(1)).findAllByAnneeUniversitaireBeforeAndEstValide(date, true);
+        verify(reservationRepository, times(1)).deleteById("1");
     }
 
     @Test
-    void testRemoveReservation() {
-        // When
-        reservationService.removeReservation("1");
+    void testRetrieveReservationParDateEtStatus() {
+        when(reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true)))
+                .thenReturn(Arrays.asList(reservation));
 
-        // Then
-        verify(reservationRepository, times(1)).deleteById("1");
+        List<Reservation> result = reservationService.trouverResSelonDateEtStatus(new Date(), true);
+
+        assertThat(result).isNotEmpty();
+        verify(reservationRepository, times(1)).findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(true));
+    }
+
+    @Test
+    void testRetrieveReservationParDateEtStatusNoResults() {
+        when(reservationRepository.findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(false)))
+                .thenReturn(Arrays.asList());  // Simuler aucune réservation
+
+        List<Reservation> result = reservationService.trouverResSelonDateEtStatus(new Date(), false);
+
+        assertThat(result).isEmpty();  // Vérifier que la liste est vide
+        verify(reservationRepository, times(1)).findAllByAnneeUniversitaireBeforeAndEstValide(any(Date.class), eq(false));
     }
 }
