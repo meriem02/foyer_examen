@@ -5,13 +5,11 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-
         <version>3.3.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>tn.esprit</groupId>
     <artifactId>tp-foyer</artifactId>
-
     <version>5.0.0</version>
     <name>tp-foyer</name>
     <description>tp-foyer</description>
@@ -76,11 +74,6 @@
             <name>Nexus Repository</name>
             <url>http://192.168.50.4:8081/repository/maven-releases/</url>
         </repository>
-        <snapshotRepository>
-            <id>deploymentRepo</id>
-            <name>Nexus Snapshot Repository</name>
-            <url>http://192.168.50.4:8081/repository/maven-snapshots/</url>
-        </snapshotRepository>
     </distributionManagement>
 
 
@@ -90,17 +83,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.0</version> <!-- Vérifiez la version la plus récente -->
-                <configuration>
-                    <repositoryId>deploymentRepo</repositoryId>
-                    <url>http://192.168.50.4:8081/repository/maven-releases/</url>
-                </configuration>
+                
             </plugin>
         </plugins>
     </build>
