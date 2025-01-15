@@ -96,11 +96,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.0.0-M1</version>
+                <version>3.1.0</version> <!-- Vérifiez la version la plus récente -->
                 <configuration>
                     <repositoryId>deploymentRepo</repositoryId>
                     <url>http://192.168.50.4:8081/repository/maven-releases/</url>
-                    <uniqueVersion>false</uniqueVersion>
                 </configuration>
             </plugin>
         </plugins>
