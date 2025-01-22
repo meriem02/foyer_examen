@@ -39,7 +39,7 @@ pipeline {
                 sh 'mvn test'
             }
         }
-/*
+
         stage('SonarQube Analysis') {
             steps {
                 sh """
@@ -49,7 +49,7 @@ pipeline {
                 """
             }
         }
-*/
+
         stage('Deploy to Nexus') {
             steps {
                 sh 'mvn deploy'
