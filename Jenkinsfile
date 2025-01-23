@@ -10,9 +10,6 @@ pipeline {
         OUTPUT_DIR = 'target'
         DOCKER_IMAGE_NAME = 'tp-foyer'
         DOCKER_IMAGE_TAG = '5.0.0'
-        DOCKER_USERNAME = credentials('mimibhaj@gmail.com') // Ajoutez vos credentials dans Jenkins
-        DOCKER_PASSWORD = credentials('mimi987654321M')
-       
     }
 
     stages {
@@ -21,7 +18,8 @@ pipeline {
                 checkout scm
             }
         }
-        stage('git') {
+
+        stage('Git Checkout') {
             steps {
                 git(
                     branch: 'meriem',
@@ -57,31 +55,33 @@ pipeline {
                 sh 'mvn deploy'
             }
         }
-        stage('Download From Nexus'){
-            steps{
-                script{
+
+        stage('Download From Nexus') {
+            steps {
+                script {
                     sh """
                         mkdir -p $OUTPUT_DIR 
-                        wget $NEXUS_URL/$ARTIFACT_PATH  -O $OUTPUT_DIR/tp-foyer-5.0.0.jar 
+                        wget $NEXUS_URL/$ARTIFACT_PATH -O $OUTPUT_DIR/tp-foyer-5.0.0.jar
                     """
                 }
             }
         }
-           stage('Build Docker Image'){
-            steps{
-                script{
-                    sh """
-                        docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f Dockerfile  .
-                    """
-                }
+
+        stage('Build Docker Image') {
+            steps {
+                sh """
+                    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f Dockerfile .
+                """
             }
-        }     
+        }
+
         stage('Push to Docker Hub') {
             steps {
-                script {
+                withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
-                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                    docker push meriem01/tp-foyer:5.0.0
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG meriem01/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+                        docker push meriem01/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
                     """
                 }
             }
