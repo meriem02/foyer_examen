@@ -10,6 +10,9 @@ pipeline {
         OUTPUT_DIR = 'target'
         DOCKER_IMAGE_NAME = 'tp-foyer'
         DOCKER_IMAGE_TAG = '5.0.0'
+        DOCKER_USERNAME = 'meriem01'  
+        DOCKER_PASSWORD = 'mimi987654321M'
+        DOCKER_HUB_URL = 'https://hub.docker.com/' 
     }
 
     stages {
@@ -19,7 +22,7 @@ pipeline {
             }
         }
 
-        stage('Git Checkout') {
+        stage('git') {
             steps {
                 git(
                     branch: 'meriem',
@@ -69,19 +72,20 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh """
-                    docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f Dockerfile .
-                """
+                script {
+                    sh """
+                        docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f Dockerfile .
+                    """
+                }
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                script {
                     sh """
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG meriem01/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
-                        docker push meriem01/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                    docker push $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
                     """
                 }
             }
