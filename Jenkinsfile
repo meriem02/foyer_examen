@@ -74,7 +74,11 @@ pipeline {
             steps {
                 script {
                     sh """
-                        docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -f Dockerfile .
+                    # Construire l'image localement
+                    docker build -t tp-foyer:5.0.0 -f Dockerfile .
+                    
+                    # Retagger l'image pour Docker Hub
+                    docker tag tp-foyer:5.0.0 meriem01/tp-foyer:5.0.0
                     """
                 }
             }
@@ -84,8 +88,11 @@ pipeline {
             steps {
                 script {
                     sh """
+                    # Connexion à Docker Hub
                     echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                    docker push $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+                    
+                    # Pousser l'image vers Docker Hub
+                    docker push meriem01/tp-foyer:5.0.0
                     """
                 }
             }
