@@ -4,7 +4,7 @@ pipeline {
     environment {
         MY_VAR = 'M2_HOME'
         SONARQUBE_URL = 'http://192.168.50.4:9000/'
-        SONARQUBE_TOKEN = 'squ_da0c1211f0d71ee90f9d3839d6a0438de8cb1a4b'
+        SONARQUBE_TOKEN = 'squ_cd767184fe8883a08d392b60cedd96ca9bdc03c6'
         NEXUS_URL = "http://192.168.50.4:8081/repository/maven-releases"
         ARTIFACT_PATH = 'tn/esprit/tp-foyer/5.0.0/tp-foyer-5.0.0.jar'
         OUTPUT_DIR = 'target'
