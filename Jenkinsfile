@@ -10,6 +10,8 @@ pipeline {
         OUTPUT_DIR = 'target'
         DOCKER_IMAGE_NAME = 'tp-foyer'
         DOCKER_IMAGE_TAG = '5.0.0'
+        DOCKER_USERNAME = credentials('mimibhaj@gmail.com') // Ajoutez vos credentials dans Jenkins
+        DOCKER_PASSWORD = credentials('mimi987654321M')
        
     }
 
@@ -74,6 +76,15 @@ pipeline {
                 }
             }
         }     
-
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    sh """
+                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                    docker push meriem01/tp-foyer:5.0.0
+                    """
+                }
+            }
+        }
     }
 }
