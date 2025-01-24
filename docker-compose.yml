@@ -16,8 +16,6 @@ services:
       MYSQL_ROOT_PASSWORD: root
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root --password=root || exit 1"]
-      interval: 10s
-      retries: 5
     ports:
       - '3307:3306'
     volumes:
