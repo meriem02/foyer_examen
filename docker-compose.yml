@@ -9,12 +9,6 @@ services:
       MYSQL_DATABASE: db
     volumes:
       - mysql-data:/var/lib/mysql1
-    networks:
-      - spring-network
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root --password=rootpassword || exit 1"]
-      interval: 10s
-      retries: 5
 
   spring-app:
     image: meriem01/tp-foyer:5.0.0
@@ -22,17 +16,12 @@ services:
     ports:
       - "8089:8089"
     depends_on:
-      mysql1:
-        condition: service_healthy
+       - mysql1
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
-    networks:
-      - spring-network
+     restart: unless-stopped
 
 volumes:
   mysql-data:
-
-networks:
-  spring-network:
