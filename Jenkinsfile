@@ -103,5 +103,12 @@ pipeline {
                                         sh 'docker compose up -d'
                                      }
                                   }
+
+         stage('Deploy Prometheus and Grafana'){
+                                     steps {
+                                        sh 'docker compose -f docker-compose-prometheus.yml -f docker-compose-grafana.yml up -d'
+                                     }
+                                  }
+        
     }
 }
