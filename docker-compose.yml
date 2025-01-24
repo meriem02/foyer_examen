@@ -1,24 +1,40 @@
 services:
-  springboot-app:
-    image: meriem01/tp-foyer:5.0.0
+  mysql1:
+    image: mysql:latest
+    container_name: mysql1
     ports:
-      - 8089:8089
-    depends_on:
-      - mysqldb
-    restart: always
-  mysqldb:
-    image: mysql
-    restart: always
+      - "3306:3306"
     environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: db
-      MYSQL_USER: meriem
+      MYSQL_USER: root
       MYSQL_PASSWORD: root
-      MYSQL_ROOT_PASSWORD: root
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root --password=root || exit 1"]
-    ports:
-      - '3307:3306'
     volumes:
-      - db_data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql1
+    networks:
+      - spring-network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root --password=rootpassword || exit 1"]
+      interval: 10s
+      retries: 5
+
+  spring-app:
+    image: meriem01/tp-foyer:5.0.0
+    container_name: spring-app
+    ports:
+      - "8089:8089"
+    depends_on:
+      mysql1:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    networks:
+      - spring-network
+
 volumes:
-  db_data: {}
+  mysql-data:
+
+networks:
+  spring-network:
