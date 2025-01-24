@@ -18,7 +18,7 @@ services:
     depends_on:
        - mysql1
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
     restart: unless-stopped
