@@ -1,28 +1,21 @@
+version: '3.8'
+
 services:
   mysql1:
-    image: mysql:latest
-    container_name: mysql1
-    ports:
-      - "3306:3306"  # Port externe 3307 vers interne 3306
+    image: mysql:5.7  # Vérifiez que l'image MySQL est correcte
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: db
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+      - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-    restart: unless-stopped
-
-  spring-app:
-    image: meriem01/tp-foyer:5.0.0
-    container_name: spring-app
-    ports:
-      - "8089:8080"  # Port externe 8089 vers interne 8080
-    depends_on:
-      - mysql1
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/db?createDatabaseIfNotExist=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-    restart: unless-stopped
+    networks:
+      - app-network
 
 volumes:
   mysql-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
